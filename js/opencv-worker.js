@@ -1,5 +1,6 @@
 const BOARD = { cols: 9, rows: 6, squareSize: 1 };
 const MIN_SAMPLES = 15;
+const DETECTION_SCALES = [1, 1.5, 2];
 
 let cvReady = false;
 let boardSize = null;
@@ -209,33 +210,88 @@ function undistort(imageData) {
 function findCorners(imageData, { refine, fast }) {
     const src = imageDataToMat(imageData);
     const gray = new self.cv.Mat();
-    const corners = new self.cv.Mat();
 
     try {
         self.cv.cvtColor(src, gray, self.cv.COLOR_RGBA2GRAY);
-        const flags = safeFlag(self.cv.CALIB_CB_ADAPTIVE_THRESH)
-            + safeFlag(self.cv.CALIB_CB_NORMALIZE_IMAGE)
-            + (fast ? safeFlag(self.cv.CALIB_CB_FAST_CHECK) : 0);
-        const found = self.cv.findChessboardCorners(gray, boardSize, corners, flags);
+        const result = findCornersMultiScale(gray, { fast });
 
-        if (found && refine) {
+        if (result.found && refine) {
             const criteria = new self.cv.TermCriteria(
                 self.cv.TermCriteria_EPS + self.cv.TermCriteria_MAX_ITER,
                 30,
                 0.001,
             );
-            self.cv.cornerSubPix(gray, corners, new self.cv.Size(11, 11), new self.cv.Size(-1, -1), criteria);
+            self.cv.cornerSubPix(gray, result.corners, new self.cv.Size(11, 11), new self.cv.Size(-1, -1), criteria);
         }
 
-        if (!found) {
-            corners.delete();
+        if (!result.found) {
             return { found: false, corners: null };
         }
 
-        return { found: true, corners };
+        return { found: true, corners: result.corners };
     } finally {
         src.delete();
         gray.delete();
+    }
+}
+
+function findCornersMultiScale(gray, { fast }) {
+    const scales = fast ? DETECTION_SCALES.slice(0, 2) : DETECTION_SCALES;
+
+    for (const scale of scales) {
+        const scaledGray = scale === 1 ? gray : resizeGray(gray, scale);
+        const corners = new self.cv.Mat();
+
+        try {
+            const found = findCornersInGray(scaledGray, corners, { fast });
+            if (found) {
+                if (scale !== 1) scaleCornerCoordinates(corners, 1 / scale);
+                return { found: true, corners };
+            }
+        } finally {
+            if (scaledGray !== gray) scaledGray.delete();
+        }
+
+        corners.delete();
+    }
+
+    return { found: false, corners: null };
+}
+
+function findCornersInGray(gray, corners, { fast }) {
+    const flags = safeFlag(self.cv.CALIB_CB_ADAPTIVE_THRESH)
+        + safeFlag(self.cv.CALIB_CB_NORMALIZE_IMAGE)
+        + (fast ? safeFlag(self.cv.CALIB_CB_FAST_CHECK) : 0);
+
+    if (self.cv.findChessboardCorners(gray, boardSize, corners, flags)) return true;
+
+    if (typeof self.cv.findChessboardCornersSB !== 'function') return false;
+
+    const sbFlags = safeFlag(self.cv.CALIB_CB_EXHAUSTIVE) + safeFlag(self.cv.CALIB_CB_ACCURACY);
+    try {
+        return self.cv.findChessboardCornersSB(gray, boardSize, corners, sbFlags);
+    } catch (error) {
+        return false;
+    }
+}
+
+function resizeGray(gray, scale) {
+    const scaledGray = new self.cv.Mat();
+    const size = new self.cv.Size(Math.round(gray.cols * scale), Math.round(gray.rows * scale));
+
+    try {
+        self.cv.resize(gray, scaledGray, size, 0, 0, self.cv.INTER_LINEAR);
+    } finally {
+        if (typeof size.delete === 'function') size.delete();
+    }
+
+    return scaledGray;
+}
+
+function scaleCornerCoordinates(corners, factor) {
+    const values = corners.data32F;
+    for (let index = 0; index < values.length; index += 1) {
+        values[index] *= factor;
     }
 }
 

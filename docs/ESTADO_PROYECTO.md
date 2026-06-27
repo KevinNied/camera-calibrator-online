@@ -620,6 +620,16 @@ grep -E '\[[[:space:]]*[0-9]+%\]|Built target|Linking|error:|FAILED|No rule' bui
 - Hay miniaturas para orientar la variedad de poses.
 - No se implemento borrar muestra puntual desde thumbnail; queda como posible mejora.
 
+## Problemas y mejoras recientes
+
+- Problema: habia que acercar mucho el chessboard para que OpenCV lo detectara.
+- Mejora aplicada: `js/opencv-worker.js` ahora usa una deteccion multiescala con `DETECTION_SCALES = [1, 1.5, 2]`.
+- Mejora aplicada: si `findChessboardCorners` no encuentra el patron, se intenta `findChessboardCornersSB` con `CALIB_CB_EXHAUSTIVE` y `CALIB_CB_ACCURACY`.
+- Mejora aplicada: cuando se detecta en una imagen escalada, las coordenadas de esquinas se reescalan al frame original antes de dibujar, capturar o refinar.
+- Resultado esperado: el tablero puede estar mas lejos o ocupar menos area del video sin perder tanta deteccion.
+- Tradeoff: la deteccion puede consumir mas CPU, especialmente cuando no encuentra tablero. Si se vuelve pesada, reducir escalas o usar el fallback completo solo para captura.
+- Revision del TP del profesor: `calibrate.py` no tenia solapas obligatorias; tenia una ventana `Detecciones` con capturas superpuestas y oscurecidas para mostrar cobertura. Nuestra seccion `Cobertura` cumple el mismo objetivo con miniaturas y guia de poses.
+
 ## Pendientes recomendados
 
 Prioridad alta:
