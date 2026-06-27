@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<body>
+<pre id="out">checking...</pre>
+<script>
+const worker = new Worker('js/opencv-capability-worker.js');
+worker.onmessage = (event) => {
+  document.getElementById('out').textContent = JSON.stringify(event.data, null, 2);
+};
+worker.onerror = (event) => {
+  document.getElementById('out').textContent = event.message;
+};
+worker.postMessage({});
+</script>
+</body>
+</html>

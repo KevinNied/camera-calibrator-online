@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="760" viewBox="0 0 1000 760" role="img" aria-label="Chessboard 9x6 inner corners">
+  <rect width="1000" height="760" fill="#ffffff"/>
+  <g transform="translate(0 0)">
+    <rect x="0" y="0" width="100" height="100" fill="#111111"/>
+    <rect x="200" y="0" width="100" height="100" fill="#111111"/>
+    <rect x="400" y="0" width="100" height="100" fill="#111111"/>
+    <rect x="600" y="0" width="100" height="100" fill="#111111"/>
+    <rect x="800" y="0" width="100" height="100" fill="#111111"/>
+    <rect x="100" y="100" width="100" height="100" fill="#111111"/>
+    <rect x="300" y="100" width="100" height="100" fill="#111111"/>
+    <rect x="500" y="100" width="100" height="100" fill="#111111"/>
+    <rect x="700" y="100" width="100" height="100" fill="#111111"/>
+    <rect x="900" y="100" width="100" height="100" fill="#111111"/>
+    <rect x="0" y="200" width="100" height="100" fill="#111111"/>
+    <rect x="200" y="200" width="100" height="100" fill="#111111"/>
+    <rect x="400" y="200" width="100" height="100" fill="#111111"/>
+    <rect x="600" y="200" width="100" height="100" fill="#111111"/>
+    <rect x="800" y="200" width="100" height="100" fill="#111111"/>
+    <rect x="100" y="300" width="100" height="100" fill="#111111"/>
+    <rect x="300" y="300" width="100" height="100" fill="#111111"/>
+    <rect x="500" y="300" width="100" height="100" fill="#111111"/>
+    <rect x="700" y="300" width="100" height="100" fill="#111111"/>
+    <rect x="900" y="300" width="100" height="100" fill="#111111"/>
+    <rect x="0" y="400" width="100" height="100" fill="#111111"/>
+    <rect x="200" y="400" width="100" height="100" fill="#111111"/>
+    <rect x="400" y="400" width="100" height="100" fill="#111111"/>
+    <rect x="600" y="400" width="100" height="100" fill="#111111"/>
+    <rect x="800" y="400" width="100" height="100" fill="#111111"/>
+    <rect x="100" y="500" width="100" height="100" fill="#111111"/>
+    <rect x="300" y="500" width="100" height="100" fill="#111111"/>
+    <rect x="500" y="500" width="100" height="100" fill="#111111"/>
+    <rect x="700" y="500" width="100" height="100" fill="#111111"/>
+    <rect x="900" y="500" width="100" height="100" fill="#111111"/>
+    <rect x="0" y="600" width="100" height="100" fill="#111111"/>
+    <rect x="200" y="600" width="100" height="100" fill="#111111"/>
+    <rect x="400" y="600" width="100" height="100" fill="#111111"/>
+    <rect x="600" y="600" width="100" height="100" fill="#111111"/>
+    <rect x="800" y="600" width="100" height="100" fill="#111111"/>
+  </g>
+  <text x="500" y="735" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#111111">Chessboard 9x6 esquinas internas</text>
+</svg>

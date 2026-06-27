@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calibrador de Camara Online</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="app-header">
+        <div>
+            <p class="eyebrow">Vision Artificial - TP Final</p>
+            <h1>Calibrador de Camara Online</h1>
+        </div>
+        <div class="status-stack" aria-live="polite">
+            <span class="status-pill" id="opencvStatus">OpenCV: cargando</span>
+            <span class="status-pill muted" id="cameraStatus">Camara: detenida</span>
+            <span class="status-pill muted" id="boardStatus">Tablero: sin detectar</span>
+        </div>
+    </header>
+
+    <section class="flow-strip" aria-label="Flujo de trabajo">
+        <div class="flow-step active" data-step="camera">
+            <span>1</span>
+            <strong>Camara</strong>
+            <small>Esperando inicio</small>
+        </div>
+        <div class="flow-step" data-step="board">
+            <span>2</span>
+            <strong>Tablero</strong>
+            <small>0/15 muestras</small>
+        </div>
+        <div class="flow-step" data-step="calibration">
+            <span>3</span>
+            <strong>Calibracion</strong>
+            <small>Esperando muestras</small>
+        </div>
+        <div class="flow-step" data-step="correction">
+            <span>4</span>
+            <strong>Correccion</strong>
+            <small>Bloqueada</small>
+        </div>
+    </section>
+
+    <main class="workspace">
+        <section class="viewer-panel" aria-label="Vista de camara">
+            <div class="viewer-toolbar">
+                <div>
+                    <h2>Vista en vivo</h2>
+                    <p id="viewerHint">Inicia la camara y mostra el chessboard 9x6.</p>
+                </div>
+                <label class="switch-control" title="Disponible despues de calibrar">
+                    <input type="checkbox" id="undistortToggle" disabled>
+                    <span class="switch-track" aria-hidden="true"></span>
+                    <span>Antidistorsion</span>
+                </label>
+            </div>
+
+            <div class="canvas-shell">
+                <video id="cameraVideo" playsinline muted></video>
+                <canvas id="workCanvas" hidden></canvas>
+                <canvas id="outputCanvas" width="640" height="480"></canvas>
+                <div class="detection-badge" id="detectionBadge">Tablero: esperando</div>
+                <div class="canvas-placeholder" aria-hidden="true">
+                    <span>Esperando señal de cámara</span>
+                    <strong>640 x 480</strong>
+                </div>
+            </div>
+
+        </section>
+
+        <aside class="side-panel" aria-label="Controles de calibracion">
+            <section class="control-group">
+                <h2>Controles</h2>
+                <p class="control-hint">Espacio = capturar muestra</p>
+                <div class="button-grid">
+                    <button class="button-primary" id="startCameraBtn" disabled>Iniciar camara</button>
+                    <button class="button-secondary" id="stopCameraBtn" disabled>Detener</button>
+                    <button class="button-primary" id="captureBtn" disabled>Capturar muestra</button>
+                    <button class="button-primary" id="calibrateBtn" disabled>Calibrar</button>
+                    <button class="button-secondary" id="undoBtn" disabled>Eliminar ultima</button>
+                    <button class="button-secondary" id="resetBtn" disabled>Reiniciar</button>
+                </div>
+            </section>
+
+            <section class="metrics-grid" aria-label="Estado de muestras">
+                <div class="metric-card">
+                    <span>Muestras</span>
+                    <strong id="sampleCount">0</strong>
+                </div>
+                <div class="metric-card">
+                    <span>Minimo</span>
+                    <strong id="minSamples">15</strong>
+                </div>
+                <div class="metric-card rms-card" id="rmsCard">
+                    <span>RMS</span>
+                    <strong id="rmsValue">-</strong>
+                    <small id="rmsQuality">Sin calibrar</small>
+                </div>
+            </section>
+
+            <section class="control-group coverage-card">
+                <h2>Cobertura</h2>
+                <p id="poseHint" class="coverage-hint">Proxima pose: centro del cuadro.</p>
+                <div class="sample-strip" id="sampleStrip" aria-label="Muestras capturadas">
+                    <span class="empty-strip">Las miniaturas apareceran al capturar muestras validas.</span>
+                </div>
+            </section>
+
+            <section class="control-group results-card">
+                <h2>Resultados</h2>
+                <div class="result-box">
+                    <h3>Matriz K</h3>
+                    <div class="matrix-box empty" id="cameraMatrix">Sin calibracion</div>
+                </div>
+                <div class="result-box">
+                    <h3>Coeficientes</h3>
+                    <div class="coeff-grid empty" id="distCoeffs">Sin calibracion</div>
+                </div>
+            </section>
+        </aside>
+    </main>
+
+    <section class="log-panel" aria-label="Registro de eventos">
+        <h2>Registro</h2>
+        <pre id="logOutput">Inicializando aplicacion...</pre>
+    </section>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
