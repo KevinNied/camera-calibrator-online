@@ -1,7 +1,7 @@
 import { startCamera, stopCamera } from './camera.js';
 
 const BOARD = { cols: 9, rows: 6 };
-const OVERLAY_COLORS = ['#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444'];
+const OVERLAY_COLORS = ['#1f35ff', '#00c9d7', '#00d957', '#d4d300', '#ff8a00', '#ff2020'];
 
 const refs = {
     video: document.getElementById('cameraVideo'),
@@ -330,30 +330,31 @@ function drawCorners(corners) {
     outputCtx.save();
     outputCtx.lineCap = 'round';
     outputCtx.lineJoin = 'round';
-    outputCtx.shadowColor = 'rgba(0, 0, 0, 0.38)';
-    outputCtx.shadowBlur = 5;
+    outputCtx.shadowColor = 'rgba(0, 0, 0, 0.42)';
+    outputCtx.shadowBlur = 4;
 
     if (isFullBoard) {
         for (let row = 0; row < BOARD.rows; row += 1) {
-            drawCornerPath(getBoardRow(corners, row), OVERLAY_COLORS[row] || OVERLAY_COLORS.at(-1));
+            drawCornerPath(getBoardRow(corners, row), OVERLAY_COLORS[row] || OVERLAY_COLORS.at(-1), 3.4);
         }
 
-        for (let col = 0; col < BOARD.cols; col += 1) {
-            const columnColor = OVERLAY_COLORS[Math.min(Math.floor((col / (BOARD.cols - 1)) * (OVERLAY_COLORS.length - 1)), OVERLAY_COLORS.length - 1)];
-            drawCornerPath(getBoardColumn(corners, col), columnColor, 2.25);
+        for (let row = 0; row < BOARD.rows - 1; row += 1) {
+            const lastInRow = corners[(row * BOARD.cols) + BOARD.cols - 1];
+            const firstInNextRow = corners[(row + 1) * BOARD.cols];
+            drawCornerPath([lastInRow, firstInNextRow], OVERLAY_COLORS[row] || OVERLAY_COLORS.at(-1), 2.4);
         }
     } else {
-        drawCornerPath(corners, '#f59e0b');
+        drawCornerPath(corners, '#ff8a00', 3.4);
     }
 
     corners.forEach((point, index) => {
         const row = isFullBoard ? Math.floor(index / BOARD.cols) : 0;
-        const fillColor = OVERLAY_COLORS[row] || '#f59e0b';
+        const fillColor = OVERLAY_COLORS[row] || '#ff8a00';
         outputCtx.beginPath();
         outputCtx.fillStyle = fillColor;
-        outputCtx.strokeStyle = '#1f2937';
-        outputCtx.lineWidth = 1.4;
-        outputCtx.arc(point.x, point.y, 4.2, 0, Math.PI * 2);
+        outputCtx.strokeStyle = colorWithAlpha(fillColor, 0.72);
+        outputCtx.lineWidth = 1.8;
+        outputCtx.arc(point.x, point.y, 3.4, 0, Math.PI * 2);
         outputCtx.fill();
         outputCtx.stroke();
     });
@@ -364,7 +365,7 @@ function drawCornerPath(points, color, lineWidth = 3) {
     if (points.length < 2) return;
 
     outputCtx.beginPath();
-    outputCtx.strokeStyle = color;
+    outputCtx.strokeStyle = colorWithAlpha(color, 0.72);
     outputCtx.lineWidth = lineWidth;
     outputCtx.moveTo(points[0].x, points[0].y);
     points.slice(1).forEach((point) => outputCtx.lineTo(point.x, point.y));
@@ -376,12 +377,12 @@ function getBoardRow(corners, row) {
     return corners.slice(start, start + BOARD.cols);
 }
 
-function getBoardColumn(corners, col) {
-    const column = [];
-    for (let row = 0; row < BOARD.rows; row += 1) {
-        column.push(corners[row * BOARD.cols + col]);
-    }
-    return column;
+function colorWithAlpha(hex, alpha) {
+    const normalized = hex.replace('#', '');
+    const red = parseInt(normalized.slice(0, 2), 16);
+    const green = parseInt(normalized.slice(2, 4), 16);
+    const blue = parseInt(normalized.slice(4, 6), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
 function updateButtons() {

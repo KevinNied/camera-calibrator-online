@@ -265,6 +265,7 @@ h3 {
 .viewer-panel,
 .side-panel,
 .log-panel {
+    min-width: 0;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     color: var(--ink);
@@ -409,6 +410,7 @@ h3 {
 .results-card {
     display: flex;
     flex-direction: column;
+    min-width: 0;
     min-height: 0;
 }
 
@@ -422,6 +424,7 @@ h3 {
 }
 
 .control-group {
+    min-width: 0;
     border: 1px solid var(--line-soft);
     border-radius: var(--radius);
     padding: 10px;
@@ -449,9 +452,11 @@ h3 {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
+    min-width: 0;
 }
 
 .metric-card {
+    min-width: 0;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 10px;
@@ -505,6 +510,7 @@ h3 {
 }
 
 .coverage-card {
+    min-width: 0;
     min-height: 0;
 }
 
@@ -516,11 +522,15 @@ h3 {
 }
 
 .sample-strip {
-    display: grid;
-    grid-auto-columns: 70px;
-    grid-auto-flow: column;
+    display: flex;
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
     gap: 7px;
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
     border: 1px solid var(--line-soft);
     border-radius: var(--radius);
     padding: 7px;
@@ -538,6 +548,7 @@ h3 {
 
 .sample-thumb {
     position: relative;
+    flex: 0 0 70px;
     overflow: hidden;
     border: 1px solid var(--line-soft);
     border-radius: var(--radius);
@@ -567,6 +578,7 @@ h3 {
 }
 
 .result-box {
+    min-width: 0;
     margin-bottom: 10px;
 }
 
@@ -587,6 +599,7 @@ pre {
 .matrix-box,
 .coeff-grid {
     overflow: auto;
+    min-width: 0;
     min-height: 38px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
