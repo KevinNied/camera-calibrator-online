@@ -54,9 +54,9 @@ Resultado esperado: la app calcula parametros de calibracion visibles.
 
 ## Prueba 7 - Antidistorsion
 
-- Activar el switch `Antidistorsion` despues de calibrar.
+- Usar el segmentado `Original | Corregido` despues de calibrar.
 - Comparar contra objetos rectos: marco de puerta, borde de monitor, hoja cuadriculada.
-- Alternar ON/OFF varias veces.
+- Alternar entre ambos modos varias veces.
 
 Resultado esperado: el feed cambia entre original y corregido sin recalibrar.
 

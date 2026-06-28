@@ -33,6 +33,10 @@ self.onmessage = async (event) => {
                 ensureReady();
                 calibrate(message.width, message.height);
                 break;
+            case 'previewCalibration':
+                ensureReady();
+                previewCalibration(message.width, message.height);
+                break;
             case 'undistort':
                 ensureReady();
                 undistort(message.imageData);
@@ -173,6 +177,7 @@ function calibrate(width, height) {
             nextDistCoeffs,
             rvecs,
             tvecs,
+            self.cv.CALIB_ZERO_TANGENT_DIST,
         );
 
         clearCalibration();
@@ -181,6 +186,48 @@ function calibrate(width, height) {
         rms = nextRms;
         imageSize = { width, height };
         self.postMessage({ type: 'calibrationResult', data: getCalibrationData() });
+    } finally {
+        objectVector.delete();
+        imageVector.delete();
+        nextCameraMatrix.delete();
+        nextDistCoeffs.delete();
+        rvecs.delete();
+        tvecs.delete();
+    }
+}
+
+function previewCalibration(width, height) {
+    if (imagePoints.length === 0) {
+        self.postMessage({ type: 'rmsPreviewResult', ok: false, count: 0 });
+        return;
+    }
+
+    const objectVector = new self.cv.MatVector();
+    const imageVector = new self.cv.MatVector();
+    const nextCameraMatrix = self.cv.Mat.eye(3, 3, self.cv.CV_64F);
+    const nextDistCoeffs = new self.cv.Mat();
+    const rvecs = new self.cv.MatVector();
+    const tvecs = new self.cv.MatVector();
+
+    try {
+        objectPoints.forEach((mat) => objectVector.push_back(mat));
+        imagePoints.forEach((mat) => imageVector.push_back(mat));
+
+        const size = new self.cv.Size(width, height);
+        const previewRms = self.cv.calibrateCamera(
+            objectVector,
+            imageVector,
+            size,
+            nextCameraMatrix,
+            nextDistCoeffs,
+            rvecs,
+            tvecs,
+            self.cv.CALIB_ZERO_TANGENT_DIST,
+        );
+
+        self.postMessage({ type: 'rmsPreviewResult', ok: true, rms: previewRms, count: imagePoints.length });
+    } catch (error) {
+        self.postMessage({ type: 'rmsPreviewResult', ok: false, count: imagePoints.length, message: error.message || String(error) });
     } finally {
         objectVector.delete();
         imageVector.delete();

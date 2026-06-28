@@ -125,7 +125,7 @@ Partes principales:
 - Indicador de progreso pasivo de 4 etapas.
 - Panel grande de video/canvas.
 - Panel lateral con controles, metricas, cobertura y resultados.
-- Registro abajo, ancho alineado con `Vista en vivo + Controles`.
+- Log colapsable bajo el video.
 
 ### Indicador de progreso
 
@@ -183,9 +183,7 @@ Botones actuales:
 
 - `Iniciar camara`: pide permiso y abre webcam.
 - `Detener`: apaga la camara.
-- `Capturar muestra`: captura si hay tablero valido.
 - `Calibrar`: se habilita al alcanzar el minimo.
-- `Eliminar ultima`: elimina la ultima muestra guardada.
 - `Reiniciar`: borra muestras/resultados.
 
 Atajo:
@@ -200,7 +198,7 @@ OpenCV se carga automaticamente en Web Worker cuando la camara inicia.
 
 - `Muestras`: cantidad de capturas validas.
 - `Minimo`: actualmente `15`.
-- `RMS`: error final de calibracion.
+- `RMS`: error de calibracion preliminar, visible desde el inicio y recalculado automaticamente con cada muestra valida.
 
 Interpretacion RMS:
 
@@ -227,7 +225,6 @@ Hints actuales:
 Limitacion actual:
 
 - Las miniaturas son visuales, no permiten borrar una muestra puntual.
-- `Eliminar ultima` sigue borrando solo la ultima muestra.
 
 ### Resultados
 
@@ -251,30 +248,31 @@ Esto mantiene el mismo dato que devuelve `calibrateCamera`; solo mejora la lectu
 Define:
 
 - Header.
-- Stepper pasivo.
+- Breadcrumb pasivo de 2 fases.
 - Viewer/canvas.
-- Switch antidistorsion.
+- Control segmentado `Original | Corregido` para antidistorsion.
 - Badge de deteccion.
 - Panel de controles.
 - Metricas.
+- RMS hero.
 - Cobertura.
 - Resultados.
-- Registro.
+- Log colapsable bajo el video.
 
 IDs importantes:
 
 ```text
 opencvStatus
 cameraStatus
-boardStatus
 undistortToggle
 detectionBadge
 startCameraBtn
 stopCameraBtn
-captureBtn
 calibrateBtn
-undoBtn
 resetBtn
+correctionPanel
+originalViewBtn
+correctedViewBtn
 sampleCount
 minSamples
 rmsValue
@@ -297,7 +295,7 @@ Direccion visual:
 - Tipografia `Manrope`.
 - Acento naranja.
 - Layout ancho con columna lateral grande.
-- Registro abajo alineado con el ancho combinado de la grilla superior.
+- Log colapsable bajo el video.
 
 Variables clave:
 
@@ -615,7 +613,7 @@ grep -E '\[[[:space:]]*[0-9]+%\]|Built target|Linking|error:|FAILED|No rule' bui
 - Se removieron las secciones visibles `Patron` y `Entrega`.
 - El stepper no es navegacion, es progreso pasivo.
 - La antidistorsion solo se controla con el switch.
-- El registro esta abajo, alineado al ancho de `Vista en vivo + Controles`.
+- El log esta bajo el video.
 - El minimo actual es 15 muestras para no hacer tediosa la demo.
 - Hay miniaturas para orientar la variedad de poses.
 - No se implemento borrar muestra puntual desde thumbnail; queda como posible mejora.

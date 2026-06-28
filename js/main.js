@@ -7,19 +7,19 @@ const refs = {
     video: document.getElementById('cameraVideo'),
     canvasShell: document.querySelector('.canvas-shell'),
     detectionBadge: document.getElementById('detectionBadge'),
-    flowSteps: Array.from(document.querySelectorAll('.flow-step')),
+    flowPhases: Array.from(document.querySelectorAll('.flow-phase')),
     workCanvas: document.getElementById('workCanvas'),
     outputCanvas: document.getElementById('outputCanvas'),
     opencvStatus: document.getElementById('opencvStatus'),
     cameraStatus: document.getElementById('cameraStatus'),
-    boardStatus: document.getElementById('boardStatus'),
     viewerHint: document.getElementById('viewerHint'),
     startCameraBtn: document.getElementById('startCameraBtn'),
     stopCameraBtn: document.getElementById('stopCameraBtn'),
-    captureBtn: document.getElementById('captureBtn'),
     calibrateBtn: document.getElementById('calibrateBtn'),
-    undoBtn: document.getElementById('undoBtn'),
     resetBtn: document.getElementById('resetBtn'),
+    correctionPanel: document.getElementById('correctionPanel'),
+    originalViewBtn: document.getElementById('originalViewBtn'),
+    correctedViewBtn: document.getElementById('correctedViewBtn'),
     undistortToggle: document.getElementById('undistortToggle'),
     sampleCount: document.getElementById('sampleCount'),
     minSamples: document.getElementById('minSamples'),
@@ -28,18 +28,19 @@ const refs = {
     rmsQuality: document.getElementById('rmsQuality'),
     cameraMatrix: document.getElementById('cameraMatrix'),
     distCoeffs: document.getElementById('distCoeffs'),
+    resultsCard: document.getElementById('resultsCard'),
     poseHint: document.getElementById('poseHint'),
     sampleStrip: document.getElementById('sampleStrip'),
     logOutput: document.getElementById('logOutput'),
 };
 
 const POSE_HINTS = [
-    'Proxima pose: centro del cuadro.',
-    'Proxima pose: tablero cerca de un borde.',
-    'Proxima pose: tablero en una esquina.',
-    'Proxima pose: tablero inclinado.',
-    'Proxima pose: tablero mas cerca de la camara.',
-    'Proxima pose: tablero mas lejos y completo.',
+    'Próxima pose: centro del cuadro.',
+    'Próxima pose: tablero cerca de un borde.',
+    'Próxima pose: tablero en una esquina.',
+    'Próxima pose: tablero inclinado.',
+    'Próxima pose: tablero más cerca de la cámara.',
+    'Próxima pose: tablero más lejos y completo.',
 ];
 
 const state = {
@@ -59,6 +60,7 @@ const state = {
     sampleCount: 0,
     minSamples: 15,
     calibrationData: null,
+    autoCalibrating: false,
     pendingCapturePreview: null,
     sampleThumbnails: [],
 };
@@ -76,26 +78,20 @@ function boot() {
     setRmsQuality(null);
     updateDetectionFeedback('idle');
     updateCoverageUi();
-    log('Aplicacion lista. Inicia la camara; OpenCV se carga automaticamente en un worker.');
+    log('Aplicación lista. Inicia la cámara; OpenCV se carga automáticamente en un worker.');
     updateButtons();
 }
 
 function bindEvents() {
     refs.startCameraBtn.addEventListener('click', handleStartCamera);
     refs.stopCameraBtn.addEventListener('click', handleStopCamera);
-    refs.captureBtn.addEventListener('click', handleCapture);
     refs.calibrateBtn.addEventListener('click', handleCalibrate);
-    refs.undoBtn.addEventListener('click', handleUndo);
     refs.resetBtn.addEventListener('click', handleReset);
-    refs.undistortToggle.addEventListener('change', () => {
-        const label = refs.undistortToggle.checked ? 'Antidistorsion activada' : 'Antidistorsion desactivada';
-        refs.viewerHint.textContent = label;
-        log(label);
-        updateFlow();
-    });
+    refs.originalViewBtn.addEventListener('click', () => setCorrectionMode(false));
+    refs.correctedViewBtn.addEventListener('click', () => setCorrectionMode(true));
 
     window.addEventListener('keydown', (event) => {
-        if (event.code === 'Space' && !refs.captureBtn.disabled) {
+        if (event.code === 'Space' && canCapture()) {
             event.preventDefault();
             handleCapture();
         }
@@ -105,7 +101,7 @@ function bindEvents() {
 async function handleStartCamera() {
     if (state.running) return;
     setBusy(true);
-    log('Iniciando camara...');
+    log('Iniciando cámara...');
     let cameraStarted = false;
 
     try {
@@ -115,14 +111,14 @@ async function handleStartCamera() {
         cameraStarted = true;
         refs.canvasShell.classList.add('is-live');
         updateDetectionFeedback(state.workerReady ? 'searching' : 'idle');
-        setStatus(refs.cameraStatus, `Camara: ${refs.outputCanvas.width}x${refs.outputCanvas.height}`, 'ok');
+        setStatus(refs.cameraStatus, `Cámara: ${refs.outputCanvas.width}x${refs.outputCanvas.height}`, 'ok');
         refs.viewerHint.textContent = state.workerReady
-            ? 'Mostra el chessboard y captura varias posiciones.'
-            : 'Camara activa. Cargando OpenCV para detectar el tablero.';
-        log(`Camara iniciada: ${refs.outputCanvas.width} x ${refs.outputCanvas.height}`);
+            ? 'Mostrá el chessboard y capturá varias posiciones.'
+            : 'Cámara activa. Cargando OpenCV para detectar el tablero.';
+        log(`Cámara iniciada: ${refs.outputCanvas.width} x ${refs.outputCanvas.height}`);
         state.animationId = requestAnimationFrame(renderLoop);
     } catch (error) {
-        setStatus(refs.cameraStatus, 'Camara: error', 'danger');
+        setStatus(refs.cameraStatus, 'Cámara: error', 'danger');
         log(error.message);
     } finally {
         setBusy(false);
@@ -141,11 +137,10 @@ function handleStopCamera() {
     state.lastCorners = null;
     refs.canvasShell.classList.remove('is-live');
     updateDetectionFeedback('idle');
-    setStatus(refs.cameraStatus, 'Camara: detenida', 'muted');
-    setStatus(refs.boardStatus, 'Tablero: sin detectar', 'muted');
-    refs.viewerHint.textContent = 'Inicia la camara y mostra el chessboard 9x6.';
+    setStatus(refs.cameraStatus, 'Cámara: detenida', 'muted');
+    refs.viewerHint.textContent = 'Inicia la cámara y mostrá el chessboard 9x6.';
     clearCanvas();
-    log('Camara detenida.');
+    log('Cámara detenida.');
     updateButtons();
 }
 
@@ -154,7 +149,7 @@ function startOpenCvWorker() {
     state.workerLoading = true;
     setStatus(refs.opencvStatus, 'OpenCV: cargando worker', 'warn');
     updateDetectionFeedback(state.running ? 'searching' : 'idle');
-    log('Cargando OpenCV.js automaticamente en Web Worker... La interfaz deberia seguir respondiendo.');
+    log('Cargando OpenCV.js automáticamente en Web Worker... La interfaz debería seguir respondiendo.');
     updateButtons();
 
     state.worker = new Worker('js/opencv-worker.js');
@@ -214,14 +209,10 @@ function handleCapture() {
 
 function handleCalibrate() {
     if (!state.workerReady || state.sampleCount < state.minSamples || state.busy) return;
+    state.autoCalibrating = false;
     setBusy(true);
-    log('Calibrando camara en worker...');
+    log('Calibrando cámara en worker...');
     state.worker.postMessage({ type: 'calibrate', width: refs.outputCanvas.width, height: refs.outputCanvas.height });
-}
-
-function handleUndo() {
-    if (!state.workerReady || state.busy) return;
-    state.worker.postMessage({ type: 'undo' });
 }
 
 function handleReset() {
@@ -242,14 +233,13 @@ function handleWorkerMessage(event) {
             updateDetectionFeedback(state.running ? 'searching' : 'idle');
             refs.viewerHint.textContent = state.running
                 ? 'Mostra el chessboard y captura varias posiciones.'
-                : 'OpenCV listo. Inicia la camara para comenzar.';
+                : 'OpenCV listo. Inicia la cámara para comenzar.';
             log('OpenCV.js listo en worker.');
             updateButtons();
             break;
         case 'detectResult':
             state.pendingDetect = false;
             state.lastCorners = message.found ? message.corners : null;
-            setStatus(refs.boardStatus, message.found ? 'Tablero: detectado' : 'Tablero: buscando', message.found ? 'ok' : 'warn');
             updateDetectionFeedback(message.found ? 'detected' : 'searching');
             break;
         case 'captureResult':
@@ -259,11 +249,10 @@ function handleWorkerMessage(event) {
             updateSampleUi();
             if (message.ok) {
                 addSampleThumbnail(state.pendingCapturePreview, message.count);
-                setStatus(refs.boardStatus, 'Tablero: muestra guardada', 'ok');
                 log(`Muestra ${message.count} capturada.`);
+                requestAutoCalibration();
             } else {
                 state.pendingCapturePreview = null;
-                setStatus(refs.boardStatus, 'Tablero: no valido', 'warn');
                 log('No se detecto el tablero. Reintenta con mejor luz y todo el patron visible.');
             }
             updateButtons();
@@ -272,10 +261,15 @@ function handleWorkerMessage(event) {
             setBusy(false);
             state.calibrationData = message.data;
             renderCalibration(message.data);
-            refs.undistortToggle.disabled = false;
-            refs.viewerHint.textContent = 'Activa el switch para ver el feed antidistorsionado.';
-            setStatus(refs.boardStatus, 'Calibracion lista', 'ok');
-            log(`Calibracion terminada. RMS: ${formatNumber(message.data.rms)}`);
+            refs.viewerHint.textContent = 'Compará la vista original contra la corregida.';
+            log(`${state.autoCalibrating ? 'RMS actualizado' : 'Calibración terminada'}. RMS: ${formatRms(message.data.rms)}`);
+            state.autoCalibrating = false;
+            updateButtons();
+            break;
+        case 'rmsPreviewResult':
+            setBusy(false);
+            state.autoCalibrating = false;
+            renderRmsPreview(message);
             updateButtons();
             break;
         case 'undistorted':
@@ -293,9 +287,7 @@ function handleWorkerMessage(event) {
         case 'imported':
             state.calibrationData = message.data;
             renderCalibration(message.data);
-            refs.undistortToggle.disabled = false;
-            setStatus(refs.boardStatus, 'Calibracion importada', 'ok');
-            log('Calibracion importada. Ya podes activar antidistorsion.');
+            log('Calibración importada. Ya podés activar antidistorsión.');
             updateButtons();
             break;
         case 'error':
@@ -303,6 +295,7 @@ function handleWorkerMessage(event) {
             state.pendingUndistort = false;
             state.workerLoading = false;
             setBusy(false);
+            state.autoCalibrating = false;
             setStatus(refs.opencvStatus, 'OpenCV: error', 'danger');
             updateDetectionFeedback('error');
             log(message.message);
@@ -390,35 +383,84 @@ function updateButtons() {
     const enoughSamples = state.sampleCount >= state.minSamples;
     refs.startCameraBtn.disabled = state.running || state.busy;
     refs.stopCameraBtn.disabled = !state.running || state.busy;
-    refs.captureBtn.disabled = !state.running || !state.workerReady || state.busy;
     refs.calibrateBtn.disabled = !state.workerReady || !enoughSamples || state.busy;
+    refs.calibrateBtn.classList.toggle('button-primary', !state.calibrationData);
+    refs.calibrateBtn.classList.toggle('button-secondary', Boolean(state.calibrationData));
     refs.calibrateBtn.classList.toggle('is-ready', state.workerReady && enoughSamples && !state.calibrationData && !state.busy);
-    refs.undoBtn.disabled = !state.workerReady || !hasSamples || state.busy;
     refs.resetBtn.disabled = !state.workerReady || !hasSamples || state.busy;
     updateFlow();
 }
 
+function canCapture() {
+    return state.running && state.workerReady && !state.busy;
+}
+
+function requestAutoCalibration() {
+    if (!state.workerReady || state.sampleCount === 0) return;
+    state.autoCalibrating = true;
+    setBusy(true);
+    refs.rmsCard.hidden = false;
+    refs.rmsValue.textContent = '...';
+    refs.rmsQuality.textContent = 'Calculando RMS preliminar.';
+    state.worker.postMessage({ type: 'previewCalibration', width: refs.outputCanvas.width, height: refs.outputCanvas.height });
+}
+
 function updateSampleUi() {
-    refs.sampleCount.textContent = String(state.sampleCount);
+    refs.sampleCount.textContent = state.sampleCount >= state.minSamples
+        ? `${state.sampleCount} muestras ✓`
+        : String(state.sampleCount);
+    if (!state.calibrationData && !state.autoCalibrating) updateRmsPlaceholder();
     updateCoverageUi();
+}
+
+function updateRmsPlaceholder() {
+    refs.rmsCard.hidden = false;
+    refs.rmsValue.textContent = '-';
+    if (state.sampleCount > 0) {
+        refs.rmsQuality.textContent = 'RMS preliminar se actualiza con cada muestra.';
+        return;
+    }
+    refs.rmsQuality.textContent = 'Capturá una muestra para calcular RMS preliminar.';
+}
+
+function renderRmsPreview(message) {
+    refs.rmsCard.hidden = false;
+    refs.rmsCard.classList.remove('rms-good', 'rms-warn', 'rms-bad');
+    if (!message.ok || !Number.isFinite(message.rms)) {
+        refs.rmsValue.textContent = '-';
+        refs.rmsQuality.textContent = 'RMS preliminar no disponible todavía.';
+        return;
+    }
+    refs.rmsValue.textContent = formatRms(message.rms);
+    setRmsQuality(message.rms);
 }
 
 function clearResults(clearWorkerCalibration = true) {
     refs.rmsValue.textContent = '-';
     refs.cameraMatrix.className = 'matrix-box empty';
-    refs.cameraMatrix.textContent = 'Sin calibracion';
+    refs.cameraMatrix.textContent = 'Sin calibración';
     refs.distCoeffs.className = 'coeff-grid empty';
-    refs.distCoeffs.textContent = 'Sin calibracion';
+    refs.distCoeffs.textContent = 'Sin calibración';
     setRmsQuality(null);
     refs.undistortToggle.checked = false;
     refs.undistortToggle.disabled = true;
+    refs.correctionPanel.hidden = true;
+    refs.resultsCard.hidden = true;
+    refs.rmsCard.hidden = false;
     state.calibrationData = null;
+    updateCorrectionMode();
+    updateRmsPlaceholder();
     if (clearWorkerCalibration && state.workerReady) state.worker.postMessage({ type: 'clearCalibration' });
     updateFlow();
 }
 
 function renderCalibration(data) {
-    refs.rmsValue.textContent = formatNumber(data.rms);
+    refs.rmsValue.textContent = formatRms(data.rms);
+    refs.rmsCard.hidden = false;
+    refs.resultsCard.hidden = false;
+    refs.correctionPanel.hidden = false;
+    refs.undistortToggle.disabled = false;
+    setCorrectionMode(false, { silent: true });
     setRmsQuality(data.rms);
     renderCameraMatrix(data.cameraMatrix);
     renderDistCoeffs(data.distCoeffs);
@@ -430,54 +472,44 @@ function setBusy(value) {
 }
 
 function setStatus(element, text, tone) {
+    if (!element) return;
     element.textContent = text;
     element.className = 'status-pill';
     if (tone && tone !== 'ok') element.classList.add(tone);
 }
 
 function updateFlow() {
-    const enoughSamples = state.sampleCount >= state.minSamples;
-    refs.flowSteps.forEach((step) => {
-        const status = getFlowStepStatus(step.dataset.step, enoughSamples);
-        step.className = `flow-step ${status.tone}`;
-        step.querySelector('small').textContent = status.detail;
-        if (status.tone === 'active') {
-            step.setAttribute('aria-current', 'step');
+    const activePhase = state.calibrationData ? 'calibrate' : 'capture';
+    document.body.classList.toggle('phase-capture', activePhase === 'capture');
+    document.body.classList.toggle('phase-calibrated', activePhase === 'calibrate');
+    refs.flowPhases.forEach((phase) => {
+        const isActive = phase.dataset.phase === activePhase;
+        phase.classList.toggle('active', isActive);
+        if (isActive) {
+            phase.setAttribute('aria-current', 'step');
         } else {
-            step.removeAttribute('aria-current');
+            phase.removeAttribute('aria-current');
         }
     });
 }
 
-function getFlowStepStatus(stepName, enoughSamples) {
-    if (stepName === 'camera') {
-        return {
-            tone: state.running ? 'active' : 'unlocked',
-            detail: state.running ? 'Camara activa' : 'Esperando inicio',
-        };
+function setCorrectionMode(corrected, options = {}) {
+    refs.undistortToggle.checked = Boolean(corrected);
+    updateCorrectionMode();
+    if (!options.silent) {
+        const label = corrected ? 'Antidistorsión activada' : 'Antidistorsión desactivada';
+        refs.viewerHint.textContent = label;
+        log(label);
     }
+    updateFlow();
+}
 
-    if (stepName === 'board') {
-        const detail = `${state.sampleCount}/${state.minSamples} muestras`;
-        if (state.calibrationData || enoughSamples) return { tone: 'completed', detail };
-        if (state.running && state.workerReady) return { tone: 'active', detail };
-        if (state.workerReady) return { tone: 'unlocked', detail };
-        return { tone: 'locked', detail };
-    }
-
-    if (stepName === 'calibration') {
-        if (state.calibrationData) return { tone: 'completed', detail: `RMS ${formatNumber(state.calibrationData.rms)}` };
-        if (enoughSamples) return { tone: 'active', detail: 'Lista para calibrar' };
-        return { tone: 'locked', detail: 'Esperando muestras' };
-    }
-
-    if (state.calibrationData) {
-        return {
-            tone: refs.undistortToggle.checked ? 'active' : 'unlocked',
-            detail: refs.undistortToggle.checked ? 'Aplicando correccion' : 'Switch disponible',
-        };
-    }
-    return { tone: 'locked', detail: 'Bloqueada' };
+function updateCorrectionMode() {
+    const corrected = refs.undistortToggle.checked;
+    refs.originalViewBtn.classList.toggle('active', !corrected);
+    refs.correctedViewBtn.classList.toggle('active', corrected);
+    refs.originalViewBtn.setAttribute('aria-pressed', String(!corrected));
+    refs.correctedViewBtn.setAttribute('aria-pressed', String(corrected));
 }
 
 function updateDetectionFeedback(status) {
@@ -519,7 +551,7 @@ function renderSampleThumbnails() {
     if (state.sampleThumbnails.length === 0) {
         const empty = document.createElement('span');
         empty.className = 'empty-strip';
-        empty.textContent = 'Las miniaturas apareceran al capturar muestras validas.';
+        empty.textContent = 'Las miniaturas aparecerán al capturar muestras válidas.';
         refs.sampleStrip.append(empty);
         return;
     }
@@ -539,7 +571,7 @@ function renderSampleThumbnails() {
 
 function updateCoverageUi() {
     if (state.sampleCount >= state.minSamples) {
-        refs.poseHint.textContent = 'Cobertura minima lista. Calibra o suma poses en zonas nuevas para mejorar el resultado.';
+        refs.poseHint.textContent = 'Cobertura mínima lista. Calibrá o sumá poses en zonas nuevas para mejorar el resultado.';
         return;
     }
     const nextHint = POSE_HINTS[state.sampleCount % POSE_HINTS.length];
@@ -596,16 +628,16 @@ function setRmsQuality(value) {
     }
     if (value < 1) {
         refs.rmsCard.classList.add('rms-good');
-        refs.rmsQuality.textContent = 'Bueno: < 1 px';
+        refs.rmsQuality.textContent = 'Excelente para demo: error menor a 1 px.';
         return;
     }
     if (value < 2) {
         refs.rmsCard.classList.add('rms-warn');
-        refs.rmsQuality.textContent = 'Aceptable: revisar cobertura';
+        refs.rmsQuality.textContent = 'Aceptable: conviene sumar poses variadas.';
         return;
     }
     refs.rmsCard.classList.add('rms-bad');
-    refs.rmsQuality.textContent = 'Alto: repetir muestras';
+    refs.rmsQuality.textContent = 'Alto: repetir muestras con mejor cobertura.';
 }
 
 function log(message) {
@@ -617,4 +649,9 @@ function log(message) {
 function formatNumber(value) {
     if (!Number.isFinite(value)) return '-';
     return Number(value).toFixed(4);
+}
+
+function formatRms(value) {
+    if (!Number.isFinite(value)) return '-';
+    return Number(value).toFixed(1);
 }

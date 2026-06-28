@@ -6,54 +6,31 @@
     <title>Calibrador de Camara Online</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="phase-capture">
     <header class="app-header">
         <div>
-            <p class="eyebrow">Vision Artificial - TP Final</p>
-            <h1>Calibrador de Camara Online</h1>
+            <p class="eyebrow">Visión Artificial - TP Final</p>
+            <h1>Calibrador de Cámara Online</h1>
         </div>
         <div class="status-stack" aria-live="polite">
             <span class="status-pill" id="opencvStatus">OpenCV: cargando</span>
-            <span class="status-pill muted" id="cameraStatus">Camara: detenida</span>
-            <span class="status-pill muted" id="boardStatus">Tablero: sin detectar</span>
+            <span class="status-pill muted" id="cameraStatus">Cámara: detenida</span>
         </div>
     </header>
 
-    <section class="flow-strip" aria-label="Flujo de trabajo">
-        <div class="flow-step active" data-step="camera">
-            <span>1</span>
-            <strong>Camara</strong>
-            <small>Esperando inicio</small>
-        </div>
-        <div class="flow-step" data-step="board">
-            <span>2</span>
-            <strong>Tablero</strong>
-            <small>0/15 muestras</small>
-        </div>
-        <div class="flow-step" data-step="calibration">
-            <span>3</span>
-            <strong>Calibracion</strong>
-            <small>Esperando muestras</small>
-        </div>
-        <div class="flow-step" data-step="correction">
-            <span>4</span>
-            <strong>Correccion</strong>
-            <small>Bloqueada</small>
-        </div>
+    <section class="flow-breadcrumb" aria-label="Flujo de trabajo">
+        <span class="flow-phase active" data-phase="capture">Capturar muestras</span>
+        <span class="flow-separator" aria-hidden="true">›</span>
+        <span class="flow-phase" data-phase="calibrate">Calibrar y corregir</span>
     </section>
 
     <main class="workspace">
-        <section class="viewer-panel" aria-label="Vista de camara">
+        <section class="viewer-panel" aria-label="Vista de cámara">
             <div class="viewer-toolbar">
                 <div>
                     <h2>Vista en vivo</h2>
-                    <p id="viewerHint">Inicia la camara y mostra el chessboard 9x6.</p>
+                    <p id="viewerHint">Inicia la cámara y mostr&aacute; el chessboard 9x6.</p>
                 </div>
-                <label class="switch-control" title="Disponible despues de calibrar">
-                    <input type="checkbox" id="undistortToggle" disabled>
-                    <span class="switch-track" aria-hidden="true"></span>
-                    <span>Antidistorsion</span>
-                </label>
             </div>
 
             <div class="canvas-shell">
@@ -67,18 +44,29 @@
                 </div>
             </div>
 
+            <section class="correction-panel" id="correctionPanel" hidden aria-label="Antidistorsión">
+                <input type="checkbox" id="undistortToggle" disabled hidden>
+                <p>Antidistorsión</p>
+                <div class="segmented-control" role="group" aria-label="Vista original o corregida">
+                    <button type="button" class="segment-option active" id="originalViewBtn">Original</button>
+                    <button type="button" class="segment-option" id="correctedViewBtn">Corregido</button>
+                </div>
+            </section>
+
+            <details class="log-panel" aria-label="Log de eventos">
+                <summary>Log</summary>
+                <pre id="logOutput">Inicializando aplicación...</pre>
+            </details>
         </section>
 
-        <aside class="side-panel" aria-label="Controles de calibracion">
+        <aside class="side-panel" aria-label="Controles de calibración">
             <section class="control-group">
                 <h2>Controles</h2>
                 <p class="control-hint">Espacio = capturar muestra</p>
                 <div class="button-grid">
-                    <button class="button-primary" id="startCameraBtn" disabled>Iniciar camara</button>
+                    <button class="button-primary" id="startCameraBtn" disabled>Iniciar cámara</button>
                     <button class="button-secondary" id="stopCameraBtn" disabled>Detener</button>
-                    <button class="button-primary" id="captureBtn" disabled>Capturar muestra</button>
                     <button class="button-primary" id="calibrateBtn" disabled>Calibrar</button>
-                    <button class="button-secondary" id="undoBtn" disabled>Eliminar ultima</button>
                     <button class="button-secondary" id="resetBtn" disabled>Reiniciar</button>
                 </div>
             </section>
@@ -89,14 +77,15 @@
                     <strong id="sampleCount">0</strong>
                 </div>
                 <div class="metric-card">
-                    <span>Minimo</span>
+                    <span>Mínimo</span>
                     <strong id="minSamples">15</strong>
                 </div>
-                <div class="metric-card rms-card" id="rmsCard">
-                    <span>RMS</span>
-                    <strong id="rmsValue">-</strong>
-                    <small id="rmsQuality">Sin calibrar</small>
-                </div>
+            </section>
+
+            <section class="rms-hero rms-card" id="rmsCard" aria-label="Calidad de calibración">
+                <span>RMS</span>
+                <strong id="rmsValue">-</strong>
+                <small id="rmsQuality">Esperando muestras</small>
             </section>
 
             <section class="control-group coverage-card">
@@ -107,24 +96,19 @@
                 </div>
             </section>
 
-            <section class="control-group results-card">
+            <section class="control-group results-card" id="resultsCard" hidden>
                 <h2>Resultados</h2>
                 <div class="result-box">
                     <h3>Matriz K</h3>
-                    <div class="matrix-box empty" id="cameraMatrix">Sin calibracion</div>
+                    <div class="matrix-box empty" id="cameraMatrix">Sin calibración</div>
                 </div>
                 <div class="result-box">
                     <h3>Coeficientes</h3>
-                    <div class="coeff-grid empty" id="distCoeffs">Sin calibracion</div>
+                    <div class="coeff-grid empty" id="distCoeffs">Sin calibración</div>
                 </div>
             </section>
         </aside>
     </main>
-
-    <section class="log-panel" aria-label="Registro de eventos">
-        <h2>Registro</h2>
-        <pre id="logOutput">Inicializando aplicacion...</pre>
-    </section>
 
     <script type="module" src="js/main.js"></script>
 </body>

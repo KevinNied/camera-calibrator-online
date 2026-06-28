@@ -13,9 +13,10 @@ La app toma como referencia conceptual el flujo del `calibrate.py` del profesor:
 - Detecta un chessboard de `9x6` esquinas internas.
 - Dibuja puntos y lineas de colores sobre el tablero detectado.
 - Captura muestras validas y refina esquinas con `cornerSubPix`.
-- Calibra con `calibrateCamera`.
-- Muestra matriz intrinseca, coeficientes de distorsion y RMS.
-- Permite activar/desactivar la antidistorsion en vivo con un switch.
+- Calibra con `calibrateCamera` usando `CALIB_ZERO_TANGENT_DIST`, igual que la referencia del profesor.
+- Muestra RMS como metrica principal y lo recalcula automaticamente con cada muestra valida.
+- Muestra matriz intrinseca y coeficientes de distorsion.
+- Permite comparar vista original y corregida con un control segmentado.
 - Requiere 15 muestras minimas para habilitar la calibracion.
 
 ## Uso local
@@ -46,10 +47,10 @@ El acceso a camara funciona en `localhost` o en sitios HTTPS, como GitHub Pages.
 4. Esperar el estado `OpenCV: listo`; la carga ocurre automaticamente en el worker.
 5. Mostrar el chessboard completo con buena luz.
 6. Esperar a que el badge indique `Tablero: detectado` y se vean los puntos de colores.
-7. Presionar `Capturar muestra` sin mover el tablero.
+7. Presionar la barra espaciadora sin mover el tablero para capturar una muestra.
 8. Repetir hasta llegar a 15 muestras con poses variadas.
 9. Presionar `Calibrar`.
-10. Activar el switch `Antidistorsion` para comparar feed original vs feed corregido.
+10. Usar el segmentado `Original | Corregido` para comparar feed original vs feed corregido.
 
 ## Tablero esperado
 

@@ -26,10 +26,10 @@ Una sola vista del tablero no alcanza para estimar bien la camara. Se necesitan 
 
 ## Resultado visible
 
-Despues de calibrar, el switch `Antidistorsion` permite comparar:
+Despues de calibrar, el segmentado `Original | Corregido` permite comparar:
 
-- OFF: feed original.
-- ON: feed corregido con los parametros calculados.
+- Original: feed sin correccion.
+- Corregido: feed corregido con los parametros calculados.
 
 ## Decisiones tecnicas
 
