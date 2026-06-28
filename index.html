@@ -57,6 +57,20 @@
                 <summary>Log</summary>
                 <pre id="logOutput">Inicializando aplicación...</pre>
             </details>
+
+            <section class="control-group results-card" id="resultsCard" hidden>
+                <h2>Resultados</h2>
+                <div class="results-grid">
+                    <div class="result-box matrix-result">
+                        <h3>Matriz K</h3>
+                        <div class="matrix-box empty" id="cameraMatrix">Sin calibración</div>
+                    </div>
+                    <div class="result-box coeff-result">
+                        <h3>Coeficientes</h3>
+                        <div class="coeff-grid empty" id="distCoeffs">Sin calibración</div>
+                    </div>
+                </div>
+            </section>
         </section>
 
         <aside class="side-panel" aria-label="Controles de calibración">
@@ -96,17 +110,6 @@
                 </div>
             </section>
 
-            <section class="control-group results-card" id="resultsCard" hidden>
-                <h2>Resultados</h2>
-                <div class="result-box">
-                    <h3>Matriz K</h3>
-                    <div class="matrix-box empty" id="cameraMatrix">Sin calibración</div>
-                </div>
-                <div class="result-box">
-                    <h3>Coeficientes</h3>
-                    <div class="coeff-grid empty" id="distCoeffs">Sin calibración</div>
-                </div>
-            </section>
         </aside>
     </main>
 

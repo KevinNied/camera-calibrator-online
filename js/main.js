@@ -460,7 +460,7 @@ function renderCalibration(data) {
     refs.resultsCard.hidden = false;
     refs.correctionPanel.hidden = false;
     refs.undistortToggle.disabled = false;
-    setCorrectionMode(false, { silent: true });
+    setCorrectionMode(true, { silent: true });
     setRmsQuality(data.rms);
     renderCameraMatrix(data.cameraMatrix);
     renderDistCoeffs(data.distCoeffs);
@@ -614,7 +614,7 @@ function renderDistCoeffs(coeffs) {
         const label = document.createElement('span');
         label.textContent = labels[index] || `c${index + 1}`;
         const number = document.createElement('strong');
-        number.textContent = formatNumber(value);
+        number.textContent = formatCoefficient(value);
         item.append(label, number);
         refs.distCoeffs.append(item);
     });
@@ -647,6 +647,11 @@ function log(message) {
 }
 
 function formatNumber(value) {
+    if (!Number.isFinite(value)) return '-';
+    return Number(value).toFixed(4);
+}
+
+function formatCoefficient(value) {
     if (!Number.isFinite(value)) return '-';
     return Number(value).toFixed(4);
 }

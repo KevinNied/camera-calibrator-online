@@ -556,6 +556,15 @@ h3 {
 .results-card {
     display: grid;
     gap: 12px;
+    margin-top: 12px;
+    padding: 12px;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: stretch;
 }
 
 .result-box {
@@ -565,7 +574,7 @@ h3 {
 .matrix-box,
 .coeff-grid,
 pre {
-    overflow: auto;
+    overflow: hidden;
     min-width: 0;
     border: 1px solid var(--line);
     border-radius: var(--radius);
@@ -576,7 +585,7 @@ pre {
 .matrix-box,
 .coeff-grid {
     min-height: 54px;
-    padding: 10px;
+    padding: 12px;
 }
 
 .matrix-box.empty,
@@ -588,7 +597,7 @@ pre {
 
 .matrix-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(112px, 1fr));
     gap: 8px;
 }
 
@@ -598,6 +607,7 @@ pre {
     border-radius: var(--radius);
     padding: 10px;
     background: var(--panel-strong);
+    min-width: 0;
 }
 
 .matrix-cell span,
@@ -618,15 +628,15 @@ pre {
 .matrix-cell strong,
 .coeff-item strong {
     display: block;
-    overflow-wrap: anywhere;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: clamp(0.9rem, 1.1vw, 1.08rem);
+    font-size: clamp(0.86rem, 1vw, 1.02rem);
     font-weight: 800;
+    white-space: nowrap;
 }
 
 .coeff-grid:not(.empty) {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(96px, 1fr));
     gap: 8px;
 }
 
@@ -645,6 +655,7 @@ pre {
 }
 
 pre {
+    overflow: auto;
     max-height: 170px;
     margin: 0 12px 12px;
     padding: 10px;
@@ -659,6 +670,10 @@ pre {
 
     .workspace {
         grid-template-columns: minmax(0, 1fr) 560px;
+    }
+
+    .results-grid {
+        grid-template-columns: minmax(360px, 0.8fr) minmax(560px, 1.2fr);
     }
 }
 
@@ -682,10 +697,10 @@ pre {
 
     .metrics-grid,
     .rms-hero,
-    .coverage-card,
-    .results-card {
+    .coverage-card {
         grid-column: 1 / -1;
     }
+
 
     .canvas-shell {
         height: auto;
@@ -714,7 +729,8 @@ pre {
 
     .button-grid,
     .metrics-grid,
-    .coeff-grid:not(.empty) {
+    .coeff-grid:not(.empty),
+    .matrix-grid {
         grid-template-columns: 1fr;
     }
 
