@@ -71,7 +71,7 @@ function initOpenCv() {
             const loaded = self.cv && self.cv.Mat;
             if (loaded) {
                 const missing = getMissingRequiredFunctions();
-                reject(new Error(`OpenCV.js cargo, pero esta build no sirve para calibracion: faltan ${missing.join(', ')}`));
+                reject(new Error(`OpenCV.js cargó, pero esta build no sirve para calibración: faltan ${missing.join(', ')}`));
                 return;
             }
             reject(new Error('No se pudo inicializar OpenCV.js en worker'));
@@ -154,7 +154,7 @@ function capture(imageData) {
 
 function calibrate(width, height) {
     if (imagePoints.length < MIN_SAMPLES) {
-        throw new Error(`Se necesitan al menos ${MIN_SAMPLES} muestras validas`);
+        throw new Error(`Se necesitan al menos ${MIN_SAMPLES} muestras válidas`);
     }
 
     const objectVector = new self.cv.MatVector();
@@ -370,7 +370,7 @@ function clearCalibration() {
 
 function importCalibration(data) {
     if (!data || !Array.isArray(data.cameraMatrix) || !Array.isArray(data.distCoeffs)) {
-        throw new Error('JSON de calibracion invalido');
+        throw new Error('JSON de calibración inválido');
     }
 
     const flatK = data.cameraMatrix.flat();
@@ -432,7 +432,7 @@ function readMatAsArray(mat) {
 }
 
 function ensureReady() {
-    if (!cvReady) throw new Error('OpenCV.js todavia no esta listo');
+    if (!cvReady) throw new Error('OpenCV.js todavía no está listo');
 }
 
 function getMissingRequiredFunctions() {

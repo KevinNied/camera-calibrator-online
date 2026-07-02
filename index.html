@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calibrador de Camara Online</title>
+    <title>Calibrador de Cámara Online</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="phase-capture">
@@ -12,16 +12,12 @@
             <p class="eyebrow">Visión Artificial - TP Final</p>
             <h1>Calibrador de Cámara Online</h1>
         </div>
-        <div class="status-stack" aria-live="polite">
-            <span class="status-pill" id="opencvStatus">OpenCV: cargando</span>
-            <span class="status-pill muted" id="cameraStatus">Cámara: detenida</span>
-        </div>
     </header>
 
     <section class="flow-breadcrumb" aria-label="Flujo de trabajo">
-        <span class="flow-phase active" data-phase="capture">Capturar muestras</span>
+        <span class="flow-phase active" data-phase="capture">Captura guiada</span>
         <span class="flow-separator" aria-hidden="true">›</span>
-        <span class="flow-phase" data-phase="calibrate">Calibrar y corregir</span>
+        <span class="flow-phase" data-phase="calibrate">Resultados</span>
     </section>
 
     <main class="workspace">
@@ -29,7 +25,7 @@
             <div class="viewer-toolbar">
                 <div>
                     <h2>Vista en vivo</h2>
-                    <p id="viewerHint">Inicia la cámara y mostr&aacute; el chessboard 9x6.</p>
+                    <p id="viewerHint">Iniciá la cámara y mostrá el chessboard 9x6.</p>
                 </div>
             </div>
 
@@ -58,19 +54,6 @@
                 <pre id="logOutput">Inicializando aplicación...</pre>
             </details>
 
-            <section class="control-group results-card" id="resultsCard" hidden>
-                <h2>Resultados</h2>
-                <div class="results-grid">
-                    <div class="result-box matrix-result">
-                        <h3>Matriz K</h3>
-                        <div class="matrix-box empty" id="cameraMatrix">Sin calibración</div>
-                    </div>
-                    <div class="result-box coeff-result">
-                        <h3>Coeficientes</h3>
-                        <div class="coeff-grid empty" id="distCoeffs">Sin calibración</div>
-                    </div>
-                </div>
-            </section>
         </section>
 
         <aside class="side-panel" aria-label="Controles de calibración">
@@ -97,16 +80,30 @@
             </section>
 
             <section class="rms-hero rms-card" id="rmsCard" aria-label="Calidad de calibración">
-                <span>RMS</span>
+                <span>RMS promedio</span>
                 <strong id="rmsValue">-</strong>
                 <small id="rmsQuality">Esperando muestras</small>
             </section>
 
             <section class="control-group coverage-card">
                 <h2>Cobertura</h2>
-                <p id="poseHint" class="coverage-hint">Proxima pose: centro del cuadro.</p>
+                <p id="poseHint" class="coverage-hint">Próxima pose: centro del cuadro.</p>
                 <div class="sample-strip" id="sampleStrip" aria-label="Muestras capturadas">
-                    <span class="empty-strip">Las miniaturas apareceran al capturar muestras validas.</span>
+                    <span class="empty-strip">Las miniaturas aparecerán al capturar muestras válidas.</span>
+                </div>
+            </section>
+
+            <section class="control-group results-card" id="resultsCard" hidden>
+                <h2>Resultados</h2>
+                <div class="results-grid">
+                    <div class="result-box matrix-result">
+                        <h3>Matriz K</h3>
+                        <div class="matrix-box empty" id="cameraMatrix">Sin calibración</div>
+                    </div>
+                    <div class="result-box coeff-result">
+                        <h3>Coeficientes</h3>
+                        <div class="coeff-grid empty" id="distCoeffs">Sin calibración</div>
+                    </div>
                 </div>
             </section>
 

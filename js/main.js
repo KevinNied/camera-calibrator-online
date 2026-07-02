@@ -10,8 +10,6 @@ const refs = {
     flowPhases: Array.from(document.querySelectorAll('.flow-phase')),
     workCanvas: document.getElementById('workCanvas'),
     outputCanvas: document.getElementById('outputCanvas'),
-    opencvStatus: document.getElementById('opencvStatus'),
-    cameraStatus: document.getElementById('cameraStatus'),
     viewerHint: document.getElementById('viewerHint'),
     startCameraBtn: document.getElementById('startCameraBtn'),
     stopCameraBtn: document.getElementById('stopCameraBtn'),
@@ -74,11 +72,10 @@ function boot() {
     bindEvents();
     refs.startCameraBtn.disabled = false;
     refs.minSamples.textContent = String(state.minSamples);
-    setStatus(refs.opencvStatus, 'OpenCV: pendiente', 'muted');
     setRmsQuality(null);
     updateDetectionFeedback('idle');
     updateCoverageUi();
-    log('Aplicación lista. Inicia la cámara; OpenCV se carga automáticamente en un worker.');
+    log('Aplicación lista. Iniciá la cámara; OpenCV se carga automáticamente en un worker.');
     updateButtons();
 }
 
@@ -111,14 +108,12 @@ async function handleStartCamera() {
         cameraStarted = true;
         refs.canvasShell.classList.add('is-live');
         updateDetectionFeedback(state.workerReady ? 'searching' : 'idle');
-        setStatus(refs.cameraStatus, `Cámara: ${refs.outputCanvas.width}x${refs.outputCanvas.height}`, 'ok');
         refs.viewerHint.textContent = state.workerReady
             ? 'Mostrá el chessboard y capturá varias posiciones.'
             : 'Cámara activa. Cargando OpenCV para detectar el tablero.';
         log(`Cámara iniciada: ${refs.outputCanvas.width} x ${refs.outputCanvas.height}`);
         state.animationId = requestAnimationFrame(renderLoop);
     } catch (error) {
-        setStatus(refs.cameraStatus, 'Cámara: error', 'danger');
         log(error.message);
     } finally {
         setBusy(false);
@@ -137,8 +132,7 @@ function handleStopCamera() {
     state.lastCorners = null;
     refs.canvasShell.classList.remove('is-live');
     updateDetectionFeedback('idle');
-    setStatus(refs.cameraStatus, 'Cámara: detenida', 'muted');
-    refs.viewerHint.textContent = 'Inicia la cámara y mostrá el chessboard 9x6.';
+    refs.viewerHint.textContent = 'Iniciá la cámara y mostrá el chessboard 9x6.';
     clearCanvas();
     log('Cámara detenida.');
     updateButtons();
@@ -147,7 +141,6 @@ function handleStopCamera() {
 function startOpenCvWorker() {
     if (state.workerReady || state.workerLoading) return;
     state.workerLoading = true;
-    setStatus(refs.opencvStatus, 'OpenCV: cargando worker', 'warn');
     updateDetectionFeedback(state.running ? 'searching' : 'idle');
     log('Cargando OpenCV.js automáticamente en Web Worker... La interfaz debería seguir respondiendo.');
     updateButtons();
@@ -157,7 +150,6 @@ function startOpenCvWorker() {
     state.worker.onerror = (event) => {
         state.workerLoading = false;
         state.worker = null;
-        setStatus(refs.opencvStatus, 'OpenCV: error', 'danger');
         log(event.message || 'Error en el worker de OpenCV');
         updateButtons();
     };
@@ -229,11 +221,10 @@ function handleWorkerMessage(event) {
             state.workerLoading = false;
             state.minSamples = message.minSamples;
             refs.minSamples.textContent = String(state.minSamples);
-            setStatus(refs.opencvStatus, 'OpenCV: listo', 'ok');
             updateDetectionFeedback(state.running ? 'searching' : 'idle');
             refs.viewerHint.textContent = state.running
-                ? 'Mostra el chessboard y captura varias posiciones.'
-                : 'OpenCV listo. Inicia la cámara para comenzar.';
+                ? 'Mostrá el chessboard y capturá varias posiciones.'
+                : 'OpenCV listo. Iniciá la cámara para comenzar.';
             log('OpenCV.js listo en worker.');
             updateButtons();
             break;
@@ -253,7 +244,7 @@ function handleWorkerMessage(event) {
                 requestAutoCalibration();
             } else {
                 state.pendingCapturePreview = null;
-                log('No se detecto el tablero. Reintenta con mejor luz y todo el patron visible.');
+                log('No se detectó el tablero. Reintentá con mejor luz y todo el patrón visible.');
             }
             updateButtons();
             break;
@@ -262,7 +253,7 @@ function handleWorkerMessage(event) {
             state.calibrationData = message.data;
             renderCalibration(message.data);
             refs.viewerHint.textContent = 'Compará la vista original contra la corregida.';
-            log(`${state.autoCalibrating ? 'RMS actualizado' : 'Calibración terminada'}. RMS: ${formatRms(message.data.rms)}`);
+            log(`${state.autoCalibrating ? 'RMS promedio actualizado' : 'Calibración terminada'}. RMS promedio: ${formatRms(message.data.rms)}`);
             state.autoCalibrating = false;
             updateButtons();
             break;
@@ -296,7 +287,6 @@ function handleWorkerMessage(event) {
             state.workerLoading = false;
             setBusy(false);
             state.autoCalibrating = false;
-            setStatus(refs.opencvStatus, 'OpenCV: error', 'danger');
             updateDetectionFeedback('error');
             log(message.message);
             updateButtons();
@@ -401,7 +391,7 @@ function requestAutoCalibration() {
     setBusy(true);
     refs.rmsCard.hidden = false;
     refs.rmsValue.textContent = '...';
-    refs.rmsQuality.textContent = 'Calculando RMS preliminar.';
+    refs.rmsQuality.textContent = 'Calculando RMS promedio preliminar.';
     state.worker.postMessage({ type: 'previewCalibration', width: refs.outputCanvas.width, height: refs.outputCanvas.height });
 }
 
@@ -417,10 +407,10 @@ function updateRmsPlaceholder() {
     refs.rmsCard.hidden = false;
     refs.rmsValue.textContent = '-';
     if (state.sampleCount > 0) {
-        refs.rmsQuality.textContent = 'RMS preliminar se actualiza con cada muestra.';
+        refs.rmsQuality.textContent = 'RMS promedio preliminar se actualiza con cada muestra.';
         return;
     }
-    refs.rmsQuality.textContent = 'Capturá una muestra para calcular RMS preliminar.';
+    refs.rmsQuality.textContent = 'Capturá una muestra para calcular RMS promedio preliminar.';
 }
 
 function renderRmsPreview(message) {
@@ -428,7 +418,7 @@ function renderRmsPreview(message) {
     refs.rmsCard.classList.remove('rms-good', 'rms-warn', 'rms-bad');
     if (!message.ok || !Number.isFinite(message.rms)) {
         refs.rmsValue.textContent = '-';
-        refs.rmsQuality.textContent = 'RMS preliminar no disponible todavía.';
+        refs.rmsQuality.textContent = 'RMS promedio preliminar no disponible todavía.';
         return;
     }
     refs.rmsValue.textContent = formatRms(message.rms);
@@ -469,13 +459,6 @@ function renderCalibration(data) {
 function setBusy(value) {
     state.busy = value;
     updateButtons();
-}
-
-function setStatus(element, text, tone) {
-    if (!element) return;
-    element.textContent = text;
-    element.className = 'status-pill';
-    if (tone && tone !== 'ok') element.classList.add(tone);
 }
 
 function updateFlow() {

@@ -106,7 +106,7 @@ export class CameraCalibrator {
 
     calibrate(width, height) {
         if (this.sampleCount < MIN_SAMPLES) {
-            throw new Error(`Se necesitan al menos ${MIN_SAMPLES} muestras validas`);
+            throw new Error(`Se necesitan al menos ${MIN_SAMPLES} muestras válidas`);
         }
 
         const cv = this.cv;
@@ -151,7 +151,7 @@ export class CameraCalibrator {
 
     importCalibration(data) {
         if (!data || !Array.isArray(data.cameraMatrix) || !Array.isArray(data.distCoeffs)) {
-            throw new Error('JSON de calibracion invalido');
+            throw new Error('JSON de calibración inválido');
         }
 
         const flatK = data.cameraMatrix.flat();

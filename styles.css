@@ -127,8 +127,7 @@ h3 {
 .app-header {
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
+    justify-content: flex-start;
     max-width: var(--page-max);
     margin: 0 auto;
     padding: 10px var(--page-pad) 8px;
@@ -141,44 +140,6 @@ h3 {
     letter-spacing: 0;
     color: var(--accent);
     text-transform: uppercase;
-}
-
-.status-stack {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.status-pill {
-    display: inline-flex;
-    align-items: center;
-    min-height: 34px;
-    border: 1px solid rgba(85, 213, 127, 0.42);
-    border-radius: 999px;
-    padding: 0 12px;
-    font-size: 0.88rem;
-    font-weight: 800;
-    color: #baf1ca;
-    background: rgba(85, 213, 127, 0.12);
-}
-
-.status-pill.muted {
-    border-color: var(--line);
-    color: var(--muted);
-    background: rgba(246, 242, 234, 0.04);
-}
-
-.status-pill.warn {
-    border-color: rgba(255, 193, 90, 0.42);
-    color: #ffcf82;
-    background: rgba(255, 193, 90, 0.1);
-}
-
-.status-pill.danger {
-    border-color: rgba(255, 107, 107, 0.42);
-    color: #ffabab;
-    background: rgba(255, 107, 107, 0.1);
 }
 
 .flow-breadcrumb {
@@ -207,9 +168,9 @@ h3 {
 
 .workspace {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 520px);
+    grid-template-columns: minmax(0, 1fr) minmax(480px, 600px);
     gap: 16px;
-    align-items: start;
+    align-items: stretch;
     max-width: var(--page-max);
     margin: 0 auto;
     padding: 0 var(--page-pad) 16px;
@@ -228,6 +189,7 @@ h3 {
 }
 
 .viewer-panel {
+    align-self: stretch;
     padding: 12px;
 }
 
@@ -403,8 +365,10 @@ h3 {
 }
 
 .side-panel {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
+    align-self: stretch;
     padding: 12px;
 }
 
@@ -556,14 +520,16 @@ h3 {
 .results-card {
     display: grid;
     gap: 12px;
-    margin-top: 12px;
     padding: 12px;
+    flex: 1 1 auto;
+    align-content: start;
+    min-height: 0;
 }
 
 .results-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
     align-items: stretch;
 }
 
@@ -585,7 +551,7 @@ pre {
 .matrix-box,
 .coeff-grid {
     min-height: 54px;
-    padding: 12px;
+    padding: 10px;
 }
 
 .matrix-box.empty,
@@ -597,15 +563,15 @@ pre {
 
 .matrix-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(112px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
 }
 
 .matrix-cell,
 .coeff-item {
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 10px;
+    padding: 8px;
     background: var(--panel-strong);
     min-width: 0;
 }
@@ -629,15 +595,15 @@ pre {
 .coeff-item strong {
     display: block;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: clamp(0.86rem, 1vw, 1.02rem);
+    font-size: clamp(0.78rem, 0.9vw, 0.95rem);
     font-weight: 800;
     white-space: nowrap;
 }
 
 .coeff-grid:not(.empty) {
     display: grid;
-    grid-template-columns: repeat(5, minmax(96px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px;
 }
 
 .log-panel {
@@ -669,22 +635,14 @@ pre {
     }
 
     .workspace {
-        grid-template-columns: minmax(0, 1fr) 560px;
-    }
-
-    .results-grid {
-        grid-template-columns: minmax(360px, 0.8fr) minmax(560px, 1.2fr);
+        grid-template-columns: minmax(0, 1fr) 640px;
     }
 }
 
-@media (max-width: 1060px) {
+@media (max-width: 1180px) {
     .app-header {
         align-items: flex-start;
         flex-direction: column;
-    }
-
-    .status-stack {
-        justify-content: flex-start;
     }
 
     .workspace {
@@ -692,9 +650,11 @@ pre {
     }
 
     .side-panel {
+        display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .results-card,
     .metrics-grid,
     .rms-hero,
     .coverage-card {
